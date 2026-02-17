@@ -14,7 +14,7 @@ tarot = TarotExtended()
 matrix = MatrixExtended()
 numerology = NumerologyExtended()
 
-# Словарь для хранения состояний пользователей
+# Словарь для хранения состояний пользователе
 user_states = {}
 user_data = {}
 
