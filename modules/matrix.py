@@ -212,7 +212,7 @@ class MatrixExtended:
         if 'error' in matrix_data:
             return matrix_data['error']
         
-        result = "🔮 **МАТРИЦА СУДЬБЫ**\n\n"
+        result = "🔮 *<b>МАТРИЦА СУДЬБЫ</b>*\n\n"
         result += f"📅 Дата рождения: {matrix_data['date']}\n"
         if matrix_data.get('time'):
             result += f"🕐 Время: {matrix_data['time']}\n"
@@ -223,14 +223,14 @@ class MatrixExtended:
         # Центр - Предназначение
         center = matrix_data['center']
         arcana = self.arcanas[center]
-        result += f"⭐ **ПРЕДНАЗНАЧЕНИЕ** (Центр)\n"
+        result += f"⭐ *<b>ПРЕДНАЗНАЧЕНИЕ</b>* (Центр)\n"
         result += f"Аркан {center}: {arcana['name']}\n"
         result += f"{arcana['description']}\n"
         result += f"➕ {arcana['plus']}\n"
         result += f"➖ {arcana['minus']}\n\n"
         
         # Личные качества
-        result += f"👤 **ЛИЧНЫЕ КАЧЕСТВА**\n"
+        result += f"👤 *<b>ЛИЧНЫЕ КАЧЕСТВА</b>*\n"
         for key, label in [('point_a', 'Личность'), ('point_b', 'Таланты'), 
                           ('point_c', 'Энергия'),('point_d', 'Здоровье')]:
             arcana_num = matrix_data[key]
@@ -239,7 +239,7 @@ class MatrixExtended:
         result += "\n"
         
         # Линия любви
-        result += f"❤️ **ЛИНИЯ ЛЮБВИ И ОТНОШЕНИЙ**\n"
+        result += f"❤️ *<b>ЛИНИЯ ЛЮБВИ И ОТНОШЕНИЙ</b>*\n"
         for i, arcana_num in enumerate(matrix_data['heaven_line'], 1):
             arcana = self.arcanas[arcana_num]
             result += f"Энергия {i}: Аркан {arcana_num} - {arcana['name']}\n"
@@ -247,7 +247,7 @@ class MatrixExtended:
         result += "\n"
         
         # Линия денег
-        result += f"💰 **ЛИНИЯ ДЕНЕГ И ФИНАНСОВ**\n"
+        result += f"💰 *<b>ЛИНИЯ ДЕНЕГ И ФИНАНСОВ</b>*\n"
         for i, arcana_num in enumerate(matrix_data['earth_line'], 1):
             arcana = self.arcanas[arcana_num]
             result += f"Энергия {i}: Аркан {arcana_num} - {arcana['name']}\n"
@@ -256,7 +256,7 @@ class MatrixExtended:
         
         # Точка комфорта
         comfort_arcana = self.arcanas[matrix_data['comfort']]
-        result += f"🏠 **ТОЧКА КОМФОРТА**\n"
+        result += f"🏠 *<b>ТОЧКА КОМФОРТА</b>*\n"
         result += f"Аркан {matrix_data['comfort']}: {comfort_arcana['name']}\n"
         result += f"Где вы чувствуете себя комфортно:\n{comfort_arcana['plus']}\n"
         
@@ -275,25 +275,25 @@ class MatrixExtended:
         center2 = matrix2['center']
         compatibility_score = self._reduce_to_arcana(center1 + center2)
         
-        result = "💑 **СОВМЕСТИМОСТЬ ПАРТНЕРОВ**\n\n"
+        result = "💑 *<b>СОВМЕСТИМОСТЬ ПАРТНЕРОВ</b>*\n\n"
         result += f"Партнер 1: Аркан {center1} - {self.arcanas[center1]['name']}\n"
         result += f"Партнер 2: Аркан {center2} - {self.arcanas[center2]['name']}\n\n"
         
         result += f"Энергия пары: Аркан {compatibility_score}\n"
         arcana = self.arcanas[compatibility_score]
-        result += f"**{arcana['name']}**\n"
+        result += f"*<b>{arcana['name']}</b>*\n"
         result += f"{arcana['description']}\n\n"
         
         # Анализ совместимости
         diff = abs(center1 - center2)
         if diff <= 3:
-            result += "✅ **Высокая совместимость**\n"
+            result += "✅ *<b>Высокая совместимость</b>*\n"
             result += "У вас схожие жизненные цели и ценности\n"
         elif diff <= 7:
-            result += "⚖️ **Средняя совместимость**\n"
+            result += "⚖️ *<b>Средняя совместимость</b>*\n"
             result += "Требуется работа над отношениями и компромиссы\n"
         else:
-            result += "⚠️ **Низкая совместимость**\n"
+            result += "⚠️ *<b>Низкая совместимость</b>*\n"
             result += "Очень разные энергии, нужно много усилий\n"
         
         return result
@@ -308,9 +308,9 @@ class MatrixExtended:
         personal_year_num = self._reduce_to_arcana(day + month + current_year)
         arcana = self.arcanas[personal_year_num]
         
-        result = f"🗓️ **ПЕРСОНАЛЬНЫЙ ГОД {current_year}**\n\n"
+        result = f"🗓️ *<b>ПЕРСОНАЛЬНЫЙ ГОД {current_year}</b>*\n\n"
         result += f"Ваша энергия года: Аркан {personal_year_num}\n"
-        result += f"**{arcana['name']}**\n\n"
+        result += f"*<b>{arcana['name']}</b>*\n\n"
         result += f"📋 Описание: {arcana['description']}\n\n"
         result += f"✅ Что развивать:\n{arcana['plus']}\n\n"
         result += f"⚠️ Чего избегать:\n{arcana['minus']}\n"
@@ -358,7 +358,7 @@ class MatrixExtended:
         pronoun2 = 'её' if gender == 'female' else 'его'
 
         lines = []
-        lines.append(f"🔮 *МАТРИЦА СУДЬБЫ — ПОЛНАЯ РАСШИФРОВКА*")
+        lines.append(f"🔮 <b>МАТРИЦА СУДЬБЫ — ПОЛНАЯ РАСШИФРОВКА</b>")
         lines.append(f"📅 Дата рождения: {matrix_data['date']}")
         if matrix_data.get('time'):
             lines.append(f"🕐 Время: {matrix_data['time']}")
@@ -369,7 +369,7 @@ class MatrixExtended:
         # 1. Личность — точка A
         a = matrix_data['point_a']
         lines.append("━━━━━━━━━━━━━━━━━━━━━━")
-        lines.append(f"👤 *ХАРАКТЕР И ЛИЧНОСТЬ* (Точка A)")
+        lines.append(f"👤 <b>ХАРАКТЕР И ЛИЧНОСТЬ</b> (Точка A)")
         lines.append(f"{arc_symbol(a)} Аркан {a} — {arc_name(a)}")
         lines.append(f"🔑 {arc_keywords(a)}")
         lines.append(arc_description(a))
@@ -380,7 +380,7 @@ class MatrixExtended:
         # 2. Таланты — точка B
         b = matrix_data['point_b']
         lines.append("━━━━━━━━━━━━━━━━━━━━━━")
-        lines.append(f"🌟 *ТАЛАНТЫ И СПОСОБНОСТИ* (Точка B)")
+        lines.append(f"🌟 <b>ТАЛАНТЫ И СПОСОБНОСТИ</b> (Точка B)")
         lines.append(f"{arc_symbol(b)} Аркан {b} — {arc_name(b)}")
         lines.append(f"🔑 {arc_keywords(b)}")
         lines.append(arc_description(b))
@@ -391,7 +391,7 @@ class MatrixExtended:
         # 3. Задачи до 40 лет — точка C
         c = matrix_data['point_c']
         lines.append("━━━━━━━━━━━━━━━━━━━━━━")
-        lines.append(f"⏳ *ЗАДАЧИ ДУШИ ДО 40 ЛЕТ* (Точка C)")
+        lines.append(f"⏳ <b>ЗАДАЧИ ДУШИ ДО 40 ЛЕТ</b> (Точка C)")
         lines.append(ASPECTS['soul_task_40']['description'])
         lines.append(f"{arc_symbol(c)} Аркан {c} — {arc_name(c)}")
         lines.append(f"🔑 {arc_keywords(c)}")
@@ -404,7 +404,7 @@ class MatrixExtended:
         # 4. Главная проработка — точка D
         d = matrix_data['point_d']
         lines.append("━━━━━━━━━━━━━━━━━━━━━━")
-        lines.append(f"🎯 *ГЛАВНАЯ ПРОРАБОТКА ВСЕЙ ЖИЗНИ* (Точка D)")
+        lines.append(f"🎯 <b>ГЛАВНАЯ ПРОРАБОТКА ВСЕЙ ЖИЗНИ</b> (Точка D)")
         lines.append(ASPECTS['main_development']['description'])
         lines.append(f"{arc_symbol(d)} Аркан {d} — {arc_name(d)}")
         lines.append(f"🔑 {arc_keywords(d)}")
@@ -417,7 +417,7 @@ class MatrixExtended:
         # 5. Зона комфорта — точка E
         e = matrix_data['point_e']
         lines.append("━━━━━━━━━━━━━━━━━━━━━━")
-        lines.append(f"🏠 *ЗОНА КОМФОРТА И ГАРМОНИИ* (Точка E)")
+        lines.append(f"🏠 <b>ЗОНА КОМФОРТА И ГАРМОНИИ</b> (Точка E)")
         lines.append(ASPECTS['comfort_zone']['description'])
         lines.append(f"{arc_symbol(e)} Аркан {e} — {arc_name(e)}")
         lines.append(f"🔑 {arc_keywords(e)}")
@@ -428,7 +428,7 @@ class MatrixExtended:
         # 6. Предназначение — центр
         ctr = matrix_data['center']
         lines.append("━━━━━━━━━━━━━━━━━━━━━━")
-        lines.append(f"⭐ *ПРЕДНАЗНАЧЕНИЕ — ЦЕНТР МАТРИЦЫ*")
+        lines.append(f"⭐ <b>ПРЕДНАЗНАЧЕНИЕ — ЦЕНТР МАТРИЦЫ</b>")
         lines.append(ASPECTS['destiny']['description'])
         lines.append(f"{arc_symbol(ctr)} Аркан {ctr} — {arc_name(ctr)}")
         lines.append(f"🔑 {arc_keywords(ctr)}")
@@ -440,7 +440,7 @@ class MatrixExtended:
 
         # 7. Линия любви
         lines.append("━━━━━━━━━━━━━━━━━━━━━━")
-        lines.append(f"❤️ *ЛИНИЯ ЛЮБВИ И ОТНОШЕНИЙ*")
+        lines.append(f"❤️ <b>ЛИНИЯ ЛЮБВИ И ОТНОШЕНИЙ</b>")
         for i, arcana_num in enumerate(matrix_data['heaven_line'], 1):
             lines.append(f"Энергия {i}: {arc_symbol(arcana_num)} Аркан {arcana_num} — {arc_name(arcana_num)}")
             lines.append(f"🔑 {arc_keywords(arcana_num)}")
@@ -451,7 +451,7 @@ class MatrixExtended:
 
         # 8. Линия денег
         lines.append("━━━━━━━━━━━━━━━━━━━━━━")
-        lines.append(f"💰 *ФИНАНСОВЫЙ КАНАЛ И ЛИНИЯ ДЕНЕГ*")
+        lines.append(f"💰 <b>ФИНАНСОВЫЙ КАНАЛ И ЛИНИЯ ДЕНЕГ</b>")
         lines.append(ASPECTS['money_channel']['description'])
         for i, arcana_num in enumerate(matrix_data['earth_line'], 1):
             lines.append(f"Энергия {i}: {arc_symbol(arcana_num)} Аркан {arcana_num} — {arc_name(arcana_num)}")
@@ -464,7 +464,7 @@ class MatrixExtended:
         # 9. Кармический хвост
         comfort = matrix_data['comfort']
         lines.append("━━━━━━━━━━━━━━━━━━━━━━")
-        lines.append(f"🌀 *КАРМИЧЕСКИЙ ХВОСТ*")
+        lines.append(f"🌀 <b>КАРМИЧЕСКИЙ ХВОСТ</b>")
         lines.append(ASPECTS['karmic_tail']['description'])
         lines.append(f"{arc_symbol(comfort)} Аркан {comfort} — {arc_name(comfort)}")
         lines.append(f"🔑 {arc_keywords(comfort)}")
@@ -488,45 +488,45 @@ class MatrixExtended:
             return ARCANAS_FULL.get(n, {}).get('symbol', '🔮')
 
         lines = []
-        lines.append(f"🔮 *МАТРИЦА СУДЬБЫ*")
+        lines.append(f"🔮 <b>МАТРИЦА СУДЬБЫ</b>")
         lines.append(f"📅 Дата рождения: {matrix_data['date']}")
         lines.append("")
-        lines.append(f"⭐ *Предназначение (центр):*")
+        lines.append(f"⭐ <b>Предназначение (центр):</b>")
         ctr = matrix_data['center']
         lines.append(f"{arc_symbol(ctr)} Аркан {ctr} — {arc_name(ctr)}")
         lines.append(ARCANAS_FULL.get(ctr, {}).get('keywords', ''))
         lines.append("")
-        lines.append(f"👤 *Личность (А):* {arc_symbol(matrix_data['point_a'])} Аркан {matrix_data['point_a']} — {arc_name(matrix_data['point_a'])}")
-        lines.append(f"🌟 *Таланты (B):* {arc_symbol(matrix_data['point_b'])} Аркан {matrix_data['point_b']} — {arc_name(matrix_data['point_b'])}")
-        lines.append(f"⏳ *Задачи до 40 (C):* {arc_symbol(matrix_data['point_c'])} Аркан {matrix_data['point_c']} — {arc_name(matrix_data['point_c'])}")
-        lines.append(f"🎯 *Главная проработка (D):* {arc_symbol(matrix_data['point_d'])} Аркан {matrix_data['point_d']} — {arc_name(matrix_data['point_d'])}")
-        lines.append(f"🏠 *Зона комфорта (E):* {arc_symbol(matrix_data['point_e'])} Аркан {matrix_data['point_e']} — {arc_name(matrix_data['point_e'])}")
+        lines.append(f"👤 <b>Личность (А):</b> {arc_symbol(matrix_data['point_a'])} Аркан {matrix_data['point_a']} — {arc_name(matrix_data['point_a'])}")
+        lines.append(f"🌟 <b>Таланты (B):</b> {arc_symbol(matrix_data['point_b'])} Аркан {matrix_data['point_b']} — {arc_name(matrix_data['point_b'])}")
+        lines.append(f"⏳ <b>Задачи до 40 (C):</b> {arc_symbol(matrix_data['point_c'])} Аркан {matrix_data['point_c']} — {arc_name(matrix_data['point_c'])}")
+        lines.append(f"🎯 <b>Главная проработка (D):</b> {arc_symbol(matrix_data['point_d'])} Аркан {matrix_data['point_d']} — {arc_name(matrix_data['point_d'])}")
+        lines.append(f"🏠 <b>Зона комфорта (E):</b> {arc_symbol(matrix_data['point_e'])} Аркан {matrix_data['point_e']} — {arc_name(matrix_data['point_e'])}")
         lines.append("")
         love1, love2 = matrix_data['heaven_line']
-        lines.append(f"❤️ *Линия любви:* {arc_symbol(love1)} {arc_name(love1)} + {arc_symbol(love2)} {arc_name(love2)}")
+        lines.append(f"❤️ <b>Линия любви:</b> {arc_symbol(love1)} {arc_name(love1)} + {arc_symbol(love2)} {arc_name(love2)}")
         money1, money2 = matrix_data['earth_line']
-        lines.append(f"💰 *Линия денег:* {arc_symbol(money1)} {arc_name(money1)} + {arc_symbol(money2)} {arc_name(money2)}")
+        lines.append(f"💰 <b>Линия денег:</b> {arc_symbol(money1)} {arc_name(money1)} + {arc_symbol(money2)} {arc_name(money2)}")
         lines.append("")
-        lines.append("💬 Нажмите /matrix_full для *полной развёрнутой расшифровки* всех позиций")
+        lines.append("💬 Нажмите /matrix_full для <b>полной развёрнутой расшифровки</b> всех позиций")
         lines.append("📖 Нажмите /arcana_[число] для описания любого аркана (напр. /arcana_7)")
         return "\n".join(lines)
 
     def get_aspects_menu(self) -> str:
         """Меню всех доступных аспектов"""
-        lines = ["📚 *РАЗДЕЛЫ МАТРИЦЫ СУДЬБЫ*", ""]
+        lines = ["📚 <b>РАЗДЕЛЫ МАТРИЦЫ СУДЬБЫ</b>", ""]
         for key, asp in ASPECTS.items():
             lines.append(f"• {asp['title']} — /aspect_{key}")
         lines.append("")
-        lines.append("🌀 *Кармические программы:*")
+        lines.append("🌀 <b>Кармические программы:</b>")
         for key, prog in KARMIC_PROGRAMS.items():
             lines.append(f"• {prog['name']} ({key}) — /karma_{key.replace('-', '_')}")
         return "\n".join(lines)
 
     def get_all_arcanas_list(self) -> str:
         """Список всех 22 арканов"""
-        lines = ["🃏 *22 АРКАНА МАТРИЦЫ СУДЬБЫ*", ""]
+        lines = ["🃏 <b>22 АРКАНА МАТРИЦЫ СУДЬБЫ</b>", ""]
         for num, arc in ARCANAS_FULL.items():
-            lines.append(f"{arc['symbol']} *Аркан {num} — {arc['name']}*")
+            lines.append(f"{arc['symbol']} <b>Аркан {num} — {arc['name']}</b>")
             lines.append(f"🔑 {arc['keywords']}")
             lines.append(f"└ /arcana_{num}")
             lines.append("")

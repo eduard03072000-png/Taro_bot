@@ -1014,14 +1014,14 @@ KARMIC_PROGRAMS = {
 
 
 def get_arcana_full_description(arcana_num: int) -> str:
-    """Получить полное описание аркана"""
+    """Получить полное описание аркана (HTML)"""
     if arcana_num not in ARCANAS:
         return f"Аркан {arcana_num} не найден"
     
     a = ARCANAS[arcana_num]
     text = (
-        f"{a['symbol']} *Аркан {arcana_num} — {a['name']}*\n"
-        f"🔑 Ключевые слова: {a['keywords']}\n\n"
+        f"{a['symbol']} <b>Аркан {arcana_num} — {a['name']}</b>\n"
+        f"🔑 <b>Ключевые слова:</b> {a['keywords']}\n\n"
         f"📖 {a['description']}\n\n"
         f"✅ {a['plus']}\n\n"
         f"❌ {a['minus']}\n\n"
@@ -1032,13 +1032,13 @@ def get_arcana_full_description(arcana_num: int) -> str:
 
 
 def get_aspect_description(aspect_key: str) -> str:
-    """Получить описание аспекта матрицы"""
+    """Получить описание аспекта матрицы (HTML)"""
     if aspect_key not in ASPECTS:
         return "Аспект не найден"
     
     asp = ASPECTS[aspect_key]
     text = (
-        f"📌 *{asp['title']}*\n"
+        f"📌 <b>{asp['title']}</b>\n"
         f"📍 Позиции: {asp['positions']}\n\n"
         f"{asp['description']}"
     )
@@ -1046,13 +1046,13 @@ def get_aspect_description(aspect_key: str) -> str:
 
 
 def get_karmic_program(program_key: str) -> str:
-    """Получить описание кармической программы"""
+    """Получить описание кармической программы (HTML)"""
     if program_key not in KARMIC_PROGRAMS:
         return "Программа не найдена"
     
     prog = KARMIC_PROGRAMS[program_key]
     text = (
-        f"🌀 *Кармическая программа {program_key}*\n"
+        f"🌀 <b>Кармическая программа {program_key}</b>\n"
         f"🔮 «{prog['name']}»\n\n"
         f"{prog['description']}"
     )

@@ -1,10 +1,17 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes, MessageHandler, filters
 import os
+import logging
 from dotenv import load_dotenv
+
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
 from modules.tarot import TarotExtended
 from modules.matrix import MatrixExtended
 from modules.numerology import NumerologyExtended
+from modules.matrix_chart import generate_matrix_image, calculate_matrix
 
 load_dotenv()
 BOT_TOKEN = os.getenv('BOT_TOKEN')
@@ -244,6 +251,7 @@ async def matrix_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     
     keyboard = [
+        [InlineKeyboardButton("🔮 Круговая диаграмма", callback_data='matrix_chart')],
         [InlineKeyboardButton("📊 Полный расчёт", callback_data='matrix_full')],
         [InlineKeyboardButton("💑 Совместимость", callback_data='matrix_compatibility')],
         [InlineKeyboardButton("👶 Детская матрица", callback_data='matrix_child')],
@@ -797,6 +805,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обработчик нажатий на кнопки"""
     query = update.callback_query
     data = query.data
+    logging.info(f"[BUTTON] user={query.from_user.id} data={data}")
     user_id = query.from_user.id
     
     # Главное меню
@@ -842,18 +851,58 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await matrix_compatibility_start(update, context)
     elif data == 'matrix_child':
         await matrix_child_start(update, context)
+    elif data == 'matrix_chart':
+        await query.answer()
+        birth_date = user_data.get(user_id, {}).get('birth_date')
+        if not birth_date:
+            await query.message.reply_text(
+                "⚠️ Сначала рассчитайте Матрицу — введите дату рождения через меню ⭐ Матрица Судьбы"
+            )
+        else:
+            await query.message.reply_text("⏳ Генерирую диаграмму...")
+            try:
+                name = user_data.get(user_id, {}).get('name', '')
+                img_bytes = generate_matrix_image(birth_date, name)
+                keyboard = [
+                    [InlineKeyboardButton("📊 Полный расчёт", callback_data='matrix_full_detailed')],
+                    [InlineKeyboardButton("◀️ Меню Матрицы", callback_data='matrix_menu')]
+                ]
+                reply_markup = InlineKeyboardMarkup(keyboard)
+                # Формируем подпись
+                mdata = calculate_matrix(birth_date)
+                caption = (
+                    f"🔮 <b>Матрица Судьбы</b>\n"
+                    f"📅 {birth_date}\n\n"
+                    f"☁ Небо: <b>{mdata['top']}</b>  🌍 Земля: <b>{mdata['bottom']}</b>\n"
+                    f"♀ Женское: <b>{mdata['left']}</b>  ♂ Мужское: <b>{mdata['right']}</b>\n"
+                    f"⭐ Предназначение: <b>{mdata['center']}</b>\n\n"
+                    f"👤 Личное: <b>{mdata['personal']}</b>  "
+                    f"👥 Социальное: <b>{mdata['social']}</b>  "
+                    f"🌟 Духовное: <b>{mdata['spiritual']}</b>"
+                )
+                from telegram import InputFile
+                import io
+                await query.message.reply_photo(
+                    photo=io.BytesIO(img_bytes),
+                    caption=caption,
+                    parse_mode='HTML',
+                    reply_markup=reply_markup
+                )
+            except Exception as e:
+                await query.message.reply_text(f"❌ Ошибка генерации диаграммы: {e}")
+
     elif data == 'matrix_arcanas_list':
         await query.answer()
         text = matrix.get_all_arcanas_list()
         keyboard = [[InlineKeyboardButton("◀️ Меню Матрицы", callback_data='matrix_menu')]]
         reply_markup = InlineKeyboardMarkup(keyboard)
-        await query.message.reply_text(text, reply_markup=reply_markup, parse_mode='Markdown')
+        await query.message.reply_text(text, reply_markup=reply_markup, parse_mode='HTML')
     elif data == 'matrix_aspects_menu':
         await query.answer()
         text = matrix.get_aspects_menu()
         keyboard = [[InlineKeyboardButton("◀️ Меню Матрицы", callback_data='matrix_menu')]]
         reply_markup = InlineKeyboardMarkup(keyboard)
-        await query.message.reply_text(text, reply_markup=reply_markup, parse_mode='Markdown')
+        await query.message.reply_text(text, reply_markup=reply_markup, parse_mode='HTML')
     elif data == 'matrix_full_detailed':
         await query.answer()
         birth_date = user_data.get(user_id, {}).get('birth_date')
@@ -871,7 +920,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup = InlineKeyboardMarkup(keyboard)
         for i, part in enumerate(parts):
             markup = reply_markup if i == len(parts) - 1 else None
-            await query.message.reply_text(part, reply_markup=markup, parse_mode='Markdown')
+            await query.message.reply_text(part, reply_markup=markup, parse_mode='HTML')
     elif data == 'matrix_skip_time':
         user_data[user_id]['birth_time'] = None
         user_states[user_id] = 'waiting_matrix_place'
@@ -917,6 +966,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         result = matrix.full_calculation(birth_date, birth_time, birth_place, gender)
         
         keyboard = [
+            [InlineKeyboardButton("🔮 Круговая диаграмма", callback_data='matrix_chart')],
             [InlineKeyboardButton("📜 Полная расшифровка", callback_data='matrix_full_detailed')],
             [InlineKeyboardButton("◀️ Главное меню", callback_data='back')]
         ]
@@ -957,7 +1007,7 @@ async def cmd_arcanas_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [[InlineKeyboardButton("◀️ Главное меню", callback_data='back')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text(
-        text, reply_markup=reply_markup, parse_mode='Markdown'
+        text, reply_markup=reply_markup, parse_mode='HTML'
     )
 
 async def cmd_aspects_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -966,7 +1016,7 @@ async def cmd_aspects_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [[InlineKeyboardButton("◀️ Главное меню", callback_data='back')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text(
-        text, reply_markup=reply_markup, parse_mode='Markdown'
+        text, reply_markup=reply_markup, parse_mode='HTML'
     )
 
 async def cmd_matrix_full(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -990,7 +1040,7 @@ async def cmd_matrix_full(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply_markup = InlineKeyboardMarkup(keyboard)
     for i, part in enumerate(parts):
         markup = reply_markup if i == len(parts) - 1 else None
-        await update.message.reply_text(part, reply_markup=markup, parse_mode='Markdown')
+        await update.message.reply_text(part, reply_markup=markup, parse_mode='HTML')
 
 async def handle_arcana_command(update: Update, context: ContextTypes.DEFAULT_TYPE, arcana_num: int):
     """Отобразить описание аркана"""
@@ -1003,7 +1053,32 @@ async def handle_arcana_command(update: Update, context: ContextTypes.DEFAULT_TY
         [InlineKeyboardButton("◀️ Главное меню", callback_data='back')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text(text, reply_markup=reply_markup, parse_mode='Markdown')
+    await update.message.reply_text(text, reply_markup=reply_markup, parse_mode='HTML')
+
+async def handle_dynamic_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обработчик динамических команд: /arcana_N, /karma_X-Y-Z, /aspect_X"""
+    text = update.message.text.split()[0]  # берём только команду без аргументов
+
+    if text.startswith('/arcana_'):
+        try:
+            arcana_num = int(text.replace('/arcana_', '').strip())
+            await handle_arcana_command(update, context, arcana_num)
+        except ValueError:
+            await update.message.reply_text("⚠️ Используйте формат: /arcana_7 (от 1 до 22)")
+
+    elif text.startswith('/karma_'):
+        from modules.matrix_descriptions import get_karmic_program
+        key = text.replace('/karma_', '').strip().replace('_', '-')
+        result = get_karmic_program(key)
+        keyboard = [[InlineKeyboardButton("◀️ Главное меню", callback_data='back')]]
+        await update.message.reply_text(result, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
+
+    elif text.startswith('/aspect_'):
+        from modules.matrix_descriptions import get_aspect_description
+        key = text.replace('/aspect_', '').strip()
+        result = get_aspect_description(key)
+        keyboard = [[InlineKeyboardButton("◀️ Главное меню", callback_data='back')]]
+        await update.message.reply_text(result, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
 
 def main():
     """Запуск бота"""
@@ -1023,6 +1098,8 @@ def main():
     app.add_handler(CommandHandler("aspects", cmd_aspects_menu))
     app.add_handler(CommandHandler("matrix_full", cmd_matrix_full))
     app.add_handler(CallbackQueryHandler(button_handler))
+    # Обработчик динамических команд /arcana_N, /karma_X, /aspect_X
+    app.add_handler(MessageHandler(filters.Regex(r'^/(arcana_|karma_|aspect_)'), handle_dynamic_command))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
     
     print("Бот PREMIUM запущен!")
