@@ -582,6 +582,20 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(result, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='Markdown')
         return
 
+    if state == 'waiting_chart_date':
+        import re
+        if re.match(r'^\d{2}\.\d{2}\.\d{4}$', text.strip()):
+            birth_date = text.strip()
+            user_data.setdefault(user_id, {})['birth_date'] = birth_date
+            user_states.pop(user_id, None)
+            await _send_matrix_chart(update.message, user_id, birth_date)
+        else:
+            await update.message.reply_text(
+                "⚠️ Неверный формат. Введите дату в виде <b>ДД.ММ.ГГГГ</b>\nНапример: <code>15.03.1990</code>",
+                parse_mode='HTML'
+            )
+        return
+
     if state == 'waiting_tarot_three_question':
         # Получен вопрос для расклада три карты
         question = text
@@ -855,41 +869,18 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.answer()
         birth_date = user_data.get(user_id, {}).get('birth_date')
         if not birth_date:
+            # Запрашиваем дату прямо сейчас
+            user_states[user_id] = 'waiting_chart_date'
+            keyboard = [[InlineKeyboardButton("◀️ Отмена", callback_data='matrix_menu')]]
             await query.message.reply_text(
-                "⚠️ Сначала рассчитайте Матрицу — введите дату рождения через меню ⭐ Матрица Судьбы"
+                "🔮 <b>Круговая диаграмма Матрицы Судьбы</b>\n\n"
+                "Введите дату рождения в формате <b>ДД.ММ.ГГГГ</b>\n"
+                "Например: <code>15.03.1990</code>",
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode='HTML'
             )
         else:
-            await query.message.reply_text("⏳ Генерирую диаграмму...")
-            try:
-                name = user_data.get(user_id, {}).get('name', '')
-                img_bytes = generate_matrix_image(birth_date, name)
-                keyboard = [
-                    [InlineKeyboardButton("📊 Полный расчёт", callback_data='matrix_full_detailed')],
-                    [InlineKeyboardButton("◀️ Меню Матрицы", callback_data='matrix_menu')]
-                ]
-                reply_markup = InlineKeyboardMarkup(keyboard)
-                # Формируем подпись
-                mdata = calculate_matrix(birth_date)
-                caption = (
-                    f"🔮 <b>Матрица Судьбы</b>\n"
-                    f"📅 {birth_date}\n\n"
-                    f"☁ Небо: <b>{mdata['top']}</b>  🌍 Земля: <b>{mdata['bottom']}</b>\n"
-                    f"♀ Женское: <b>{mdata['left']}</b>  ♂ Мужское: <b>{mdata['right']}</b>\n"
-                    f"⭐ Предназначение: <b>{mdata['center']}</b>\n\n"
-                    f"👤 Личное: <b>{mdata['personal']}</b>  "
-                    f"👥 Социальное: <b>{mdata['social']}</b>  "
-                    f"🌟 Духовное: <b>{mdata['spiritual']}</b>"
-                )
-                from telegram import InputFile
-                import io
-                await query.message.reply_photo(
-                    photo=io.BytesIO(img_bytes),
-                    caption=caption,
-                    parse_mode='HTML',
-                    reply_markup=reply_markup
-                )
-            except Exception as e:
-                await query.message.reply_text(f"❌ Ошибка генерации диаграммы: {e}")
+            await _send_matrix_chart(query.message, user_id, birth_date)
 
     elif data == 'matrix_arcanas_list':
         await query.answer()
@@ -1079,6 +1070,37 @@ async def handle_dynamic_command(update: Update, context: ContextTypes.DEFAULT_T
         result = get_aspect_description(key)
         keyboard = [[InlineKeyboardButton("◀️ Главное меню", callback_data='back')]]
         await update.message.reply_text(result, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
+
+async def _send_matrix_chart(message, user_id: int, birth_date: str):
+    """Генерирует и отправляет диаграмму матрицы"""
+    import io
+    await message.reply_text("⏳ Генерирую диаграмму...")
+    try:
+        name = user_data.get(user_id, {}).get('name', '')
+        img_bytes = generate_matrix_image(birth_date, name)
+        mdata = calculate_matrix(birth_date)
+        caption = (
+            f"🔮 <b>Матрица Судьбы</b>\n"
+            f"📅 {birth_date}\n\n"
+            f"☁ Небо: <b>{mdata['top']}</b>  🌍 Земля: <b>{mdata['bottom']}</b>\n"
+            f"♀ Женское: <b>{mdata['left']}</b>  ♂ Мужское: <b>{mdata['right']}</b>\n"
+            f"⭐ Предназначение: <b>{mdata['center']}</b>\n\n"
+            f"👤 Личное: <b>{mdata['personal']}</b>  "
+            f"👥 Социальное: <b>{mdata['social']}</b>  "
+            f"🌟 Духовное: <b>{mdata['spiritual']}</b>"
+        )
+        keyboard = [
+            [InlineKeyboardButton("📜 Полная расшифровка", callback_data='matrix_full_detailed')],
+            [InlineKeyboardButton("◀️ Меню Матрицы", callback_data='matrix_menu')]
+        ]
+        await message.reply_photo(
+            photo=io.BytesIO(img_bytes),
+            caption=caption,
+            parse_mode='HTML',
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+    except Exception as e:
+        await message.reply_text(f"❌ Ошибка генерации: {e}")
 
 def main():
     """Запуск бота"""
