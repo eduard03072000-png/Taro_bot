@@ -247,6 +247,8 @@ async def matrix_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("📊 Полный расчёт", callback_data='matrix_full')],
         [InlineKeyboardButton("💑 Совместимость", callback_data='matrix_compatibility')],
         [InlineKeyboardButton("👶 Детская матрица", callback_data='matrix_child')],
+        [InlineKeyboardButton("🃏 22 аркана — описания", callback_data='matrix_arcanas_list')],
+        [InlineKeyboardButton("📚 Аспекты Матрицы", callback_data='matrix_aspects_menu')],
         [InlineKeyboardButton("◀️ Главное меню", callback_data='back')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -546,7 +548,32 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     
     state = user_states.get(user_id)
-    
+
+    # Обработка команд /arcana_N и /karma_X-Y-Z прямо в тексте
+    if text.startswith('/arcana_'):
+        try:
+            arcana_num = int(text.replace('/arcana_', '').strip())
+            await handle_arcana_command(update, context, arcana_num)
+        except ValueError:
+            await update.message.reply_text("⚠️ Используйте формат: /arcana_7 (1-22)")
+        return
+
+    if text.startswith('/karma_'):
+        from modules.matrix_descriptions import KARMIC_PROGRAMS, get_karmic_program
+        key = text.replace('/karma_', '').strip().replace('_', '-')
+        result = get_karmic_program(key)
+        keyboard = [[InlineKeyboardButton("◀️ Главное меню", callback_data='back')]]
+        await update.message.reply_text(result, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='Markdown')
+        return
+
+    if text.startswith('/aspect_'):
+        from modules.matrix_descriptions import get_aspect_description
+        key = text.replace('/aspect_', '').strip()
+        result = get_aspect_description(key)
+        keyboard = [[InlineKeyboardButton("◀️ Главное меню", callback_data='back')]]
+        await update.message.reply_text(result, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='Markdown')
+        return
+
     if state == 'waiting_tarot_three_question':
         # Получен вопрос для расклада три карты
         question = text
@@ -815,6 +842,36 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await matrix_compatibility_start(update, context)
     elif data == 'matrix_child':
         await matrix_child_start(update, context)
+    elif data == 'matrix_arcanas_list':
+        await query.answer()
+        text = matrix.get_all_arcanas_list()
+        keyboard = [[InlineKeyboardButton("◀️ Меню Матрицы", callback_data='matrix_menu')]]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await query.message.reply_text(text, reply_markup=reply_markup, parse_mode='Markdown')
+    elif data == 'matrix_aspects_menu':
+        await query.answer()
+        text = matrix.get_aspects_menu()
+        keyboard = [[InlineKeyboardButton("◀️ Меню Матрицы", callback_data='matrix_menu')]]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await query.message.reply_text(text, reply_markup=reply_markup, parse_mode='Markdown')
+    elif data == 'matrix_full_detailed':
+        await query.answer()
+        birth_date = user_data.get(user_id, {}).get('birth_date')
+        if not birth_date:
+            await query.message.reply_text("⚠️ Сначала рассчитайте Матрицу через меню — Э Матрица Судьбы")
+            return
+        birth_time = user_data.get(user_id, {}).get('birth_time')
+        birth_place = user_data.get(user_id, {}).get('birth_place')
+        gender = user_data.get(user_id, {}).get('gender', 'female')
+        matrix_data = matrix.calculate_full_matrix(birth_date, birth_time, birth_place)
+        result = matrix.format_full_matrix_result(matrix_data, gender)
+        MAX_LEN = 4000
+        parts = [result[i:i+MAX_LEN] for i in range(0, len(result), MAX_LEN)]
+        keyboard = [[InlineKeyboardButton("◀️ Главное меню", callback_data='back')]]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        for i, part in enumerate(parts):
+            markup = reply_markup if i == len(parts) - 1 else None
+            await query.message.reply_text(part, reply_markup=markup, parse_mode='Markdown')
     elif data == 'matrix_skip_time':
         user_data[user_id]['birth_time'] = None
         user_states[user_id] = 'waiting_matrix_place'
@@ -853,16 +910,22 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         birth_time = user_data[user_id].get('birth_time')
         birth_place = user_data[user_id].get('birth_place')
         
+        # Сохраняем гендер для /matrix_full
+        user_data[user_id]['gender'] = gender
+
         # Расчёт матрицы
         result = matrix.full_calculation(birth_date, birth_time, birth_place, gender)
         
-        keyboard = [[InlineKeyboardButton("◀️ Главное меню", callback_data='back')]]
+        keyboard = [
+            [InlineKeyboardButton("📜 Полная расшифровка", callback_data='matrix_full_detailed')],
+            [InlineKeyboardButton("◀️ Главное меню", callback_data='back')]
+        ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
         await query.message.reply_text(result, reply_markup=reply_markup, parse_mode='Markdown')
         
         user_states.pop(user_id, None)
-        user_data.pop(user_id, None)
+        # Не чистим user_data - оставляем для /matrix_full
     
     # Нумерология
     elif data == 'numerology_menu':
@@ -884,6 +947,64 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif data == 'info':
         await info(update, context)
 
+# ========================
+# ОБРАБОТЧИКИ КОМАНД МАТРИЦЫ СУДЬБЫ
+# ========================
+
+async def cmd_arcanas_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Список всех 22 арканов"""
+    text = matrix.get_all_arcanas_list()
+    keyboard = [[InlineKeyboardButton("◀️ Главное меню", callback_data='back')]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text(
+        text, reply_markup=reply_markup, parse_mode='Markdown'
+    )
+
+async def cmd_aspects_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Меню аспектов Матрицы"""
+    text = matrix.get_aspects_menu()
+    keyboard = [[InlineKeyboardButton("◀️ Главное меню", callback_data='back')]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text(
+        text, reply_markup=reply_markup, parse_mode='Markdown'
+    )
+
+async def cmd_matrix_full(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Полная расшифровка сохранённой матрицы"""
+    user_id = update.effective_user.id
+    birth_date = user_data.get(user_id, {}).get('birth_date')
+    if not birth_date:
+        await update.message.reply_text(
+            "⚠️ Сначала рассчитайте Матрицу через главное меню — ⭐ Матрица Судьбы"
+        )
+        return
+    birth_time = user_data.get(user_id, {}).get('birth_time')
+    birth_place = user_data.get(user_id, {}).get('birth_place')
+    gender = user_data.get(user_id, {}).get('gender', 'female')
+    matrix_data = matrix.calculate_full_matrix(birth_date, birth_time, birth_place)
+    result = matrix.format_full_matrix_result(matrix_data, gender)
+    # Делим на части если слишком длинная
+    MAX_LEN = 4000
+    parts = [result[i:i+MAX_LEN] for i in range(0, len(result), MAX_LEN)]
+    keyboard = [[InlineKeyboardButton("◀️ Главное меню", callback_data='back')]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    for i, part in enumerate(parts):
+        markup = reply_markup if i == len(parts) - 1 else None
+        await update.message.reply_text(part, reply_markup=markup, parse_mode='Markdown')
+
+async def handle_arcana_command(update: Update, context: ContextTypes.DEFAULT_TYPE, arcana_num: int):
+    """Отобразить описание аркана"""
+    if not 1 <= arcana_num <= 22:
+        await update.message.reply_text("⚠️ Аркан должен быть от 1 до 22")
+        return
+    text = matrix.get_arcana_description(arcana_num)
+    keyboard = [
+        [InlineKeyboardButton("🃏 Список всех арканов", callback_data='matrix_arcanas_list')],
+        [InlineKeyboardButton("◀️ Главное меню", callback_data='back')]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text(text, reply_markup=reply_markup, parse_mode='Markdown')
+
 def main():
     """Запуск бота"""
     import sys
@@ -898,6 +1019,9 @@ def main():
     app = Application.builder().token(BOT_TOKEN).build()
     
     app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("arcanas", cmd_arcanas_list))
+    app.add_handler(CommandHandler("aspects", cmd_aspects_menu))
+    app.add_handler(CommandHandler("matrix_full", cmd_matrix_full))
     app.add_handler(CallbackQueryHandler(button_handler))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
     
