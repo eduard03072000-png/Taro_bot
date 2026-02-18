@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta http-equiv="ngrok-skip-browser-warning" content="1" />
+  <title>🔮 Матрица Судьбы</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script>
+    // Пропустить предупреждение ngrok при загрузке страницы
+    if (window.location.hostname.includes('ngrok')) {
+      fetch(window.location.href, {
+        headers: { 'ngrok-skip-browser-warning': '1' }
+      });
+    }
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+</body>
+</html>

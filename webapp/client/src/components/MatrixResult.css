@@ -1,0 +1,138 @@
+.result-wrap { display: flex; flex-direction: column; gap: 12px; }
+
+.result-header {
+  background: linear-gradient(135deg, #150830, #200040);
+  border: 1px solid #3a1a6a;
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.result-date { font-size: 13px; color: var(--gray); margin-bottom: 12px; }
+
+.result-center {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.center-badge {
+  width: 64px; height: 64px;
+  background: var(--red);
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+  border: 2px solid rgba(255,255,255,0.3);
+}
+
+.center-badge strong { font-size: 18px; line-height: 1; }
+
+.center-label { font-size: 12px; color: var(--gray); }
+.center-name { font-size: 20px; font-weight: 700; color: var(--gold); }
+
+/* ── Карточка аркана ── */
+.arcana-card {
+  background: #0f0820;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, #2a1a4a);
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.arcana-card:active { opacity: 0.9; }
+
+.arcana-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.arcana-badge {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 16px;
+}
+
+.arcana-symbol { font-size: 14px; line-height: 1; }
+.arcana-num { font-size: 15px; font-weight: 700; line-height: 1; }
+
+.arcana-info { flex: 1; min-width: 0; }
+
+.section-label { font-size: 11px; color: var(--gray); margin-bottom: 2px; }
+.arcana-name { font-size: 16px; font-weight: 600; color: #fff; }
+.arcana-keywords { font-size: 11px; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.chevron {
+  color: #555;
+  font-size: 10px;
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+.chevron.open { transform: rotate(180deg); color: var(--gold); }
+
+/* ── Раскрытое содержимое ── */
+.arcana-body {
+  padding: 0 16px 16px;
+  border-top: 1px solid #1a0d35;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.section-desc {
+  font-size: 12px;
+  color: var(--gray);
+  padding-top: 12px;
+  font-style: italic;
+}
+
+.arcana-plus, .arcana-minus, .arcana-advice { display: flex; flex-direction: column; gap: 4px; }
+.arcana-plus p, .arcana-minus p, .arcana-advice p { font-size: 13px; color: var(--light); line-height: 1.5; }
+
+.tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+  align-self: flex-start;
+}
+.tag.plus  { background: rgba(27,94,32,0.4); color: #a5d6a7; }
+.tag.minus { background: rgba(183,28,28,0.3); color: #ef9a9a; }
+.tag.advice { background: rgba(255,193,7,0.2); color: #ffd54f; }
+
+/* ── Кнопки ── */
+.result-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+
+.btn-share {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #1565c0, #0d47a1);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.btn-back {
+  width: 100%;
+  padding: 13px;
+  background: transparent;
+  border: 1px solid #3a1a6a;
+  color: #aaa;
+  font-size: 14px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+.btn-back:active { background: #1a0d35; }

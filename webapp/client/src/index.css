@@ -1,0 +1,20 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #080616;
+  color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  min-height: 100vh;
+  -webkit-tap-highlight-color: transparent;
+}
+
+:root {
+  --gold: #f1c40f;
+  --purple: #6a1b9a;
+  --blue: #1565c0;
+  --green: #1b5e20;
+  --pink: #e91e8c;
+  --red: #b71c1c;
+  --gray: #777;
+  --light: #cccccc;
+}

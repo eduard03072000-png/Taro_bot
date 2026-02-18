@@ -58,7 +58,7 @@ def generate_matrix_image(birth_date: str, name: str = '') -> bytes:
     if 'error' in d:
         raise ValueError(d['error'])
 
-    W, H = 1500, 1680
+    W, H = 1500, 1780
     img = Image.new('RGB', (W, H), '#080616')
     draw = ImageDraw.Draw(img)
 
@@ -94,9 +94,9 @@ def generate_matrix_image(birth_date: str, name: str = '') -> bytes:
     }
 
     # --- Геометрия ---
-    HDR = 150    # шапка
+    HDR = 170    # шапка
     FTR = 260    # блок предназначений
-    PAD = 160    # боковые отступы
+    PAD = 200    # боковые отступы
 
     cx = W // 2
     dia_top = HDR + PAD
@@ -124,7 +124,7 @@ def generate_matrix_image(birth_date: str, name: str = '') -> bytes:
     P = {k: pt(k) for k in ['top','bottom','left','right','tl','lb','br','rt','ct','cl','cb','cr']}
 
     # Возрастные точки — по диагоналям за пределами ромба
-    age_r = half + 80
+    age_r = half + 110
     def age_pt(deg):
         a = math.radians(deg)
         return (int(cx + age_r*math.sin(a)), int(cy - age_r*math.cos(a)))
@@ -199,7 +199,7 @@ def generate_matrix_image(birth_date: str, name: str = '') -> bytes:
         draw.text(pos, str(num), fill=CK['white'], font=font_big, anchor='mm')
         if show_arcana:
             name_arc = ARCANA.get(num, '')
-            draw.text((pos[0], pos[1]+r_big+13), name_arc,
+            draw.text((pos[0], pos[1]+r_big+16), name_arc,
                       fill='#cccccc', font=F['arcana'], anchor='mm')
 
     def age_node(pos, num, age):
@@ -213,8 +213,18 @@ def generate_matrix_image(birth_date: str, name: str = '') -> bytes:
         draw.text((pos[0]+dx, pos[1]+dy), f'{age}л', fill='#555', font=F['tiny'], anchor='mm')
 
     # --- Возрастные узлы ---
+    # Угловые точки (0, 20, 40, 60) — это сами угловые кружки, не дублируем
+    # Рисуем только диагональные: 10, 30, 50, 70
+    diagonal_ages = [10, 30, 50, 70]
     for age, pos in AGE_POS.items():
-        age_node(pos, AGE_DATA[age], age)
+        if age in diagonal_ages:
+            age_node(pos, AGE_DATA[age], age)
+    
+    # Для угловых точек рисуем только метку возраста рядом с кружком
+    corner_age_offsets = {0: (0, -115), 20: (-105, 0), 40: (0, 115), 60: (105, 0)}
+    for age, (dx, dy) in corner_age_offsets.items():
+        pos = P[AGE_CORNER[age]]
+        draw.text((pos[0]+dx, pos[1]+dy), f'{age}л', fill='#555', font=F['tiny'], anchor='mm')
 
     # --- Боковые точки (середины сторон) ---
     for key in ['tl','lb','br','rt']:
@@ -225,27 +235,31 @@ def generate_matrix_image(birth_date: str, name: str = '') -> bytes:
         num_node(P[key], d[key], CK['inner'], r_big=26, font_big=F['sm'], show_arcana=False)
 
     # --- Угловые точки ---
-    # Небо (верх)
-    num_node(P['top'], d['top'], CK['top'], r_big=48, font_big=F['big'])
-    draw.text((P['top'][0], P['top'][1]-62), 'НЕБО', fill=CK['lblue'], font=F['label'], anchor='mm')
-    draw.text((P['top'][0], P['top'][1]-44), 'день', fill=CK['gray'], font=F['tiny'], anchor='mm')
+    # Небо (верх): метки ВЫШЕ кружка (с запасом), аркан НИЖЕ кружка
+    num_node(P['top'], d['top'], CK['top'], r_big=48, font_big=F['big'], show_arcana=False)
+    draw.text((P['top'][0], P['top'][1]-90), 'НЕБО', fill=CK['lblue'], font=F['label'], anchor='mm')
+    draw.text((P['top'][0], P['top'][1]-70), 'день', fill=CK['gray'], font=F['tiny'], anchor='mm')
+    draw.text((P['top'][0], P['top'][1]+68), ARCANA.get(d['top'],''), fill='#cccccc', font=F['arcana'], anchor='mm')
 
-    # Земля (низ)
-    num_node(P['bottom'], d['bottom'], CK['bottom'], r_big=48, font_big=F['big'])
-    draw.text((P['bottom'][0], P['bottom'][1]+66), 'ЗЕМЛЯ', fill=CK['lgreen'], font=F['label'], anchor='mm')
-    draw.text((P['bottom'][0], P['bottom'][1]+84), 'д+м+г', fill=CK['gray'], font=F['tiny'], anchor='mm')
+    # Земля (низ): аркан ВЫШЕ кружка, метки НИЖЕ кружка
+    num_node(P['bottom'], d['bottom'], CK['bottom'], r_big=48, font_big=F['big'], show_arcana=False)
+    draw.text((P['bottom'][0], P['bottom'][1]-68), ARCANA.get(d['bottom'],''), fill='#cccccc', font=F['arcana'], anchor='mm')
+    draw.text((P['bottom'][0], P['bottom'][1]+72), 'ЗЕМЛЯ', fill=CK['lgreen'], font=F['label'], anchor='mm')
+    draw.text((P['bottom'][0], P['bottom'][1]+92), 'д+м+г', fill=CK['gray'], font=F['tiny'], anchor='mm')
 
-    # Женское (лево)
-    num_node(P['left'], d['left'], CK['left'], r_big=48, font_big=F['big'])
-    lx = P['left'][0] - 160
-    draw.text((lx, P['left'][1]-16), 'ЖЕНСКОЕ', fill=CK['lpink'], font=F['label'], anchor='mm')
+    # Женское (лево): метки слева, аркан справа снизу от кружка
+    num_node(P['left'], d['left'], CK['left'], r_big=48, font_big=F['big'], show_arcana=False)
+    lx = P['left'][0] - 190
+    draw.text((lx, P['left'][1]-18), 'ЖЕНСКОЕ', fill=CK['lpink'], font=F['label'], anchor='mm')
     draw.text((lx, P['left'][1]+6),  'месяц',   fill=CK['gray'],  font=F['tiny'],  anchor='mm')
+    draw.text((P['left'][0]+2, P['left'][1]+68), ARCANA.get(d['left'],''), fill='#cccccc', font=F['arcana'], anchor='mm')
 
-    # Мужское (право)
-    num_node(P['right'], d['right'], CK['right'], r_big=48, font_big=F['big'])
-    rx = P['right'][0] + 160
-    draw.text((rx, P['right'][1]-16), 'МУЖСКОЕ', fill=CK['lblue'], font=F['label'], anchor='mm')
+    # Мужское (право): метки справа, аркан слева снизу от кружка
+    num_node(P['right'], d['right'], CK['right'], r_big=48, font_big=F['big'], show_arcana=False)
+    rx = P['right'][0] + 190
+    draw.text((rx, P['right'][1]-18), 'МУЖСКОЕ', fill=CK['lblue'], font=F['label'], anchor='mm')
     draw.text((rx, P['right'][1]+6),  'год',      fill=CK['gray'],  font=F['tiny'],  anchor='mm')
+    draw.text((P['right'][0]-2, P['right'][1]+68), ARCANA.get(d['right'],''), fill='#cccccc', font=F['arcana'], anchor='mm')
 
     # --- Центр ---
     circle((cx,cy), 62, '#200040', outline=CK['gold'], w=3)

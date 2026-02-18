@@ -2,6 +2,8 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes, MessageHandler, filters
 import os
 import logging
+import re
+from datetime import datetime
 from dotenv import load_dotenv
 
 logging.basicConfig(
@@ -25,9 +27,36 @@ numerology = NumerologyExtended()
 user_states = {}
 user_data = {}
 
+def validate_date(text: str):
+    """
+    Валидация даты рождения.
+    Возвращает (True, нормализованная_строка) или (False, сообщение_об_ошибке)
+    """
+    text = text.strip()
+    if not re.match(r'^\d{2}\.\d{2}\.\d{4}$', text):
+        return False, (
+            "⚠️ Неверный формат даты.\n"
+            "Введите дату в формате <b>ДД.ММ.ГГГГ</b>\n"
+            "Например: <code>15.03.1990</code>"
+        )
+    try:
+        datetime.strptime(text, '%d.%m.%Y')
+    except ValueError:
+        return False, (
+            "⚠️ Такой даты не существует.\n"
+            "Пожалуйста, проверьте день и месяц и введите корректную дату.\n"
+            "Например: <code>15.03.1990</code>"
+        )
+    return True, text
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Главное меню"""
-    keyboard = [
+    webapp_url = os.getenv('WEBAPP_URL', '')
+    webapp_btn = []
+    if webapp_url:
+        from telegram import WebAppInfo
+        webapp_btn = [[InlineKeyboardButton("🌐 Мини-приложение", web_app=WebAppInfo(url=webapp_url))]]
+    keyboard = webapp_btn + [
         [InlineKeyboardButton("🎴 Расклады Таро", callback_data='tarot_menu')],
         [InlineKeyboardButton("⭐ Матрица Судьбы", callback_data='matrix_menu')],
         [InlineKeyboardButton("🔢 Нумерология", callback_data='numerology_menu')],
@@ -583,17 +612,14 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if state == 'waiting_chart_date':
-        import re
-        if re.match(r'^\d{2}\.\d{2}\.\d{4}$', text.strip()):
-            birth_date = text.strip()
-            user_data.setdefault(user_id, {})['birth_date'] = birth_date
-            user_states.pop(user_id, None)
-            await _send_matrix_chart(update.message, user_id, birth_date)
-        else:
-            await update.message.reply_text(
-                "⚠️ Неверный формат. Введите дату в виде <b>ДД.ММ.ГГГГ</b>\nНапример: <code>15.03.1990</code>",
-                parse_mode='HTML'
-            )
+        ok, val = validate_date(text)
+        if not ok:
+            await update.message.reply_text(val, parse_mode='HTML')
+            return
+        birth_date = val
+        user_data.setdefault(user_id, {})['birth_date'] = birth_date
+        user_states.pop(user_id, None)
+        await _send_matrix_chart(update.message, user_id, birth_date)
         return
 
     if state == 'waiting_tarot_three_question':
@@ -629,7 +655,11 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     elif state == 'waiting_matrix_date':
         # Сохраняем дату и запрашиваем время
-        user_data[user_id]['birth_date'] = text
+        ok, val = validate_date(text)
+        if not ok:
+            await update.message.reply_text(val, parse_mode='HTML')
+            return
+        user_data[user_id]['birth_date'] = val
         user_states[user_id] = 'waiting_matrix_time'
         
         keyboard = [[InlineKeyboardButton("⏩ Пропустить", callback_data='matrix_skip_time')]]
@@ -674,7 +704,11 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     elif state == 'waiting_compatibility_date1':
         # Сохраняем первую дату и запрашиваем вторую
-        user_data[user_id]['date1'] = text
+        ok, val = validate_date(text)
+        if not ok:
+            await update.message.reply_text(val, parse_mode='HTML')
+            return
+        user_data[user_id]['date1'] = val
         user_states[user_id] = 'waiting_compatibility_date2'
         
         await update.message.reply_text(
@@ -684,8 +718,12 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     elif state == 'waiting_compatibility_date2':
         # Сохраняем вторую дату и делаем расчёт
+        ok, val = validate_date(text)
+        if not ok:
+            await update.message.reply_text(val, parse_mode='HTML')
+            return
         date1 = user_data[user_id].get('date1')
-        date2 = text
+        date2 = val
         
         result = matrix.calculate_compatibility(date1, date2)
         
@@ -699,7 +737,11 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     elif state == 'waiting_child_date':
         # Расчёт детской матрицы
-        result = matrix.full_calculation(text)
+        ok, val = validate_date(text)
+        if not ok:
+            await update.message.reply_text(val, parse_mode='HTML')
+            return
+        result = matrix.full_calculation(val)
         
         keyboard = [[InlineKeyboardButton("◀️ Главное меню", callback_data='back')]]
         reply_markup = InlineKeyboardMarkup(keyboard)
@@ -735,7 +777,11 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     elif state == 'waiting_lifepath_date':
         # Расчёт Числа Жизненного Пути
-        result_data = numerology.calculate_life_path(text)
+        ok, val = validate_date(text)
+        if not ok:
+            await update.message.reply_text(val, parse_mode='HTML')
+            return
+        result_data = numerology.calculate_life_path(val)
         
         if 'error' in result_data:
             await update.message.reply_text(f"❌ {result_data['error']}")
@@ -757,7 +803,11 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     elif state == 'waiting_year_date':
         # Расчёт Персонального года
-        result_data = numerology.calculate_personal_year(text)
+        ok, val = validate_date(text)
+        if not ok:
+            await update.message.reply_text(val, parse_mode='HTML')
+            return
+        result_data = numerology.calculate_personal_year(val)
         
         if 'error' in result_data:
             await update.message.reply_text(f"❌ {result_data['error']}")
@@ -777,7 +827,11 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     elif state == 'waiting_pythagoras_date':
         # Расчёт Квадрата Пифагора
-        result_data = numerology.calculate_pythagoras_square(text)
+        ok, val = validate_date(text)
+        if not ok:
+            await update.message.reply_text(val, parse_mode='HTML')
+            return
+        result_data = numerology.calculate_pythagoras_square(val)
         
         if 'error' in result_data:
             await update.message.reply_text(f"❌ {result_data['error']}")
