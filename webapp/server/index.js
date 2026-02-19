@@ -9,7 +9,7 @@ const PORT = process.env.WEBAPP_PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Добавляем заголовок для обхода предупреждения ngrok
+// Обход предупреждения ngrok
 app.use((req, res, next) => {
   res.setHeader('ngrok-skip-browser-warning', '1');
   next();
