@@ -42,3 +42,14 @@ wheels/
 # OS
 .DS_Store
 Thumbs.db
+
+# Node modules
+node_modules/
+webapp/client/node_modules/
+webapp/server/node_modules/
+
+# React build (генерируется на сервере)
+
+# Temp files
+ssh_check.py
+*.bat.bak
